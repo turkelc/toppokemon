@@ -1,0 +1,112 @@
+import pandas as pd
+import sqlite3
+import numpy as np
+import os
+
+
+#def attack_efficiency(attacker,defender):
+#    type_adv*((((42*pokemon_attack*attack_type_max)/defender_defence)+100)*1.5/50)
+
+#blastoise against fire 0.5
+#charmender against water
+
+df151=pd.read_csv('Poke151.csv')
+#dffull=pd.read_csv("poke_full.csv")
+dfagainst=pd.read_csv("pokeagainst.csv")
+cnx = sqlite3.connect("attacks.db")
+dftypemax = pd.read_sql_query("select lower(type) as type, max(power) as max_power from attacks group by type", cnx)
+
+pokelist=np.array(df151['Name'])
+#pokedict={key:i for i, key in enumerate(pokelist)}
+#print(pokedict)
+##### sor!!!!! for k in pokelist: pokedict["k"] = 0
+
+pokedict = {}
+for pok in pokelist:
+    pokedict[pok] = 0
+print(pokedict)
+
+'''def pokemon_attack (attacker):
+     pa=df151[df151.Name==attacker].Attack.item()
+     return pa
+
+def defender_defence (defender):
+    dd=df151[df151.Name==defender].Defense.item()
+    return dd
+
+
+def type_adv (attacker,defender):
+    typeatt=str(df151[df151.Name==attacker].Type1.item()).lower()
+    print(typeatt)
+    ta=dfagainst.loc[dfagainst.name==defender,typeatt].item()
+    return ta
+
+def attack_type_max (attacker,defener):
+    cnx = sqlite3.connect("attacks.db")
+    dftypemax = pd.read_sql_query("select lower(type) as type, max(power) as max_power from attacks group by type", cnx)
+    atm=dftypemax[dftypemax.type == typeatt].max_power.item()
+    return atm '''
+
+def attack_efficiency(attacker,defender):
+    pokemon_attack=float(df151[df151.Name==attacker].Attack.item())
+    defender_defence=float(df151[df151.Name==defender].Defense.item())
+    typeatt = str(df151[df151.Name == attacker].Type1.item()).lower()
+    type_adv=float(dfagainst.loc[dfagainst.name==defender,typeatt].item())
+    attack_type_max=float(dftypemax[dftypemax.type == typeatt].max_power.item())
+    att_eff= type_adv*((((42*pokemon_attack*attack_type_max)/defender_defence)+100)*0.4/50)
+    return att_eff
+
+
+#print(attack_efficiency("Butterfree","Beedrill"))
+
+
+def battle (attacker,defender):
+    atk_a=attack_efficiency(attacker,defender)
+    hp_a=df151[df151.Name==defender].HP.item()
+    atk_b=attack_efficiency(defender,attacker)
+    hp_b=df151[df151.Name==attacker].HP.item()
+    turn_attacker=round(hp_a/atk_a)
+    turn_defender=round(hp_b/atk_b)
+    print(turn_defender,turn_attacker)
+    if turn_attacker>turn_defender:
+        pokedict[defender]+=3
+    elif turn_defender>turn_attacker:
+        pokedict[attacker]+=3
+    else :
+        pokedict[defender]+=1 
+        pokedict[attacker]+=1
+
+
+
+
+for ind, poke in enumerate(pokelist):
+    if (ind+1)!=len(pokelist):
+        for poke_inner in pokelist[ind+1:]:
+            try:
+                battle(poke,poke_inner)
+            except:
+                print(poke)
+                print(poke_inner)
+
+
+#sorted_pokedict = sorted(pokedict.items(), key=lambda kv: kv[1])
+#print(sorted_pokedict.most_common(10))
+
+myList = sorted(pokedict.items(), key=lambda x: x[1], reverse=True)
+print("top 10 pokemon are:")
+print(myList)
+
+#battle_simulator
+
+def battle (attacker,defender):
+    atk_a=attack_efficiency(attacker,defender)
+    hp_a=df151[df151.Name==defender].HP.item()
+    atk_b=attack_efficiency(defender,attacker)
+    hp_b=df151[df151.Name==attacker].HP.item()
+    turn_attacker=round(hp_a/atk_a)
+    turn_defender=round(hp_b/atk_b)
+    if turn_attacker>turn_defender:
+        print("winner: ",defender)
+    else :
+        print("winner: ", attacker)
+
